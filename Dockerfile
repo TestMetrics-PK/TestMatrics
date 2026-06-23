@@ -11,7 +11,7 @@ COPY resources ./resources
 COPY vite.config.js .
 RUN npm run build
 
-FROM php:8.3-fpm-alpine
+FROM php:8.3-cli-alpine
 WORKDIR /var/www/html
 RUN apk add --no-cache icu-dev oniguruma-dev libzip-dev zip unzip
 RUN docker-php-ext-install intl pdo pdo_sqlite zip
@@ -23,5 +23,5 @@ COPY --from=assets /app/public/build ./public/build
 COPY . .
 
 RUN chown -R www-data:www-data /var/www/html
-EXPOSE 9000
-CMD ["php-fpm"]
+EXPOSE 10000
+CMD ["php", "-S", "0.0.0.0:10000", "-t", "public", "public/index.php"]
