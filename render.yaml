@@ -1,14 +1,10 @@
 services:
   - type: web
     name: testmatrics
-    env: node
+    env: docker
     plan: free
     branch: master
-    buildCommand: |
-      composer install --no-progress --no-suggest --prefer-dist
-      npm ci
-      npm run build
-    startCommand: php -S 0.0.0.0:10000 -t public
+    dockerfilePath: Dockerfile
     envVars:
       - key: APP_ENV
         value: production
@@ -18,7 +14,3 @@ services:
         value: https://testmatrics.onrender.com
       - key: DB_CONNECTION
         value: pgsql
-      - key: DATABASE_URL
-        fromService:
-          name: testmatrics-db
-          type: postgresql
