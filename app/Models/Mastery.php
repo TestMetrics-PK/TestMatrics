@@ -1,0 +1,12 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Mastery extends Model
+{
+    protected $fillable = ['user_id','skill','level','progress'];
+
+    protected $casts = ['progress' => 'float'];
+}
