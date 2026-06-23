@@ -1,0 +1,14 @@
+vendor
+node_modules
+.git
+.github
+.env
+.env.*
+storage
+composer.phar
+npm-debug.log*
+yarn-error.log*
+.DS_Store
+README.md
+Dockerfile
+.dockerignore

@@ -1,0 +1,64 @@
+name: CI and Docker Publish
+
+on:
+  push:
+    branches: [master, main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v4
+        with:
+          php-version: '8.3'
+          extensions: mbstring, fileinfo, zip, sqlite, pdo_sqlite, curl, openssl
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Cache Composer dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - name: Install Composer deps
+        run: composer install --no-progress --no-suggest --prefer-dist
+      - name: Install NPM deps
+        run: npm ci
+      - name: Build assets
+        run: npm run build --if-present
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+          mkdir -p database
+          touch database/database.sqlite
+      - name: Run migrations
+        run: php artisan migrate --force
+      - name: Run tests
+        run: php artisan test
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v5
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/testmatrics:latest
+            ghcr.io/${{ github.repository_owner }}/testmatrics:${{ github.sha }}
